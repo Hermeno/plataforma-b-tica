@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "nest start --watch",
-    "build": "nest build",
+    "build": "prisma generate --schema=../../packages/database/prisma/schema.prisma && nest build",
     "start": "node dist/main",
     "lint": "eslint src --ext .ts"
   },
@@ -22,6 +22,7 @@
     "@nestjs/platform-socket.io": "^10.3.0",
     "@leaozinho/database": "*",
     "@prisma/client": "^5.14.0",
+    "prisma": "^5.14.0",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0",
