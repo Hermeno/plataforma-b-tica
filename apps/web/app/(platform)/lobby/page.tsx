@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { Suspense } from 'react'
 import HeroBanner from '@/components/lobby/HeroBanner'
 import GameGrid from '@/components/lobby/GameGrid'
 import CategoryTabs from '@/components/lobby/CategoryTabs'
@@ -14,9 +15,11 @@ export default function LobbyPage() {
   return (
     <div className="p-4 lg:p-6 pb-24 lg:pb-6">
       <HeroBanner />
-      <CategoryTabs />
-      <ProvidersBar />
-      <LobbyGames />
+      <Suspense>
+        <CategoryTabs />
+        <ProvidersBar />
+        <LobbyGames />
+      </Suspense>
     </div>
   )
 }
