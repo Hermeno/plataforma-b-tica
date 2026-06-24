@@ -15,9 +15,33 @@ export class GamesService {
     private wallet: WalletService,
   ) {}
 
+  private readonly categoryMap: Record<string, string | null> = {
+    slots: 'SLOTS',
+    fish: 'FISH',
+    crash: 'CRASH',
+    table: 'TABLE',
+    sport: 'SPORT',
+    live: 'LIVE_CASINO',
+    live_casino: 'LIVE_CASINO',
+  }
+
   async getLobby(category?: string, provider?: string, search?: string, page = 1, limit = 48) {
     const where: any = { isActive: true }
-    if (category) where.category = category.toUpperCase()
+
+    if (category) {
+      const slug = category.toLowerCase()
+      if (slug === 'populares') {
+        where.isFeatured = true
+      } else if (slug === 'novidades') {
+        where.isNew = true
+      } else if (slug === 'favoritos' || slug === 'recentes') {
+        // handled client-side; no DB filter needed
+      } else {
+        const mapped = this.categoryMap[slug]
+        if (mapped) where.category = mapped
+      }
+    }
+
     if (provider) where.provider = { contains: provider, mode: 'insensitive' }
     if (search) where.name = { contains: search, mode: 'insensitive' }
 
