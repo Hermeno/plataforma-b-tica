@@ -1,0 +1,412 @@
+// ============================================
+// LEAOZINHO - PRISMA SCHEMA
+// Banco de dados principal da plataforma
+// ============================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// ENUMS
+// ============================================
+
+enum UserStatus {
+  PENDING_VERIFICATION
+  ACTIVE
+  SUSPENDED
+  BANNED
+  SELF_EXCLUDED
+}
+
+enum KycStatus {
+  NOT_STARTED
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum TransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  BET
+  WIN
+  BONUS
+  ROLLBACK
+  FEE
+}
+
+enum TransactionStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  PIX
+  BANK_TRANSFER
+}
+
+enum BetStatus {
+  ACTIVE
+  WON
+  LOST
+  CANCELLED
+  REFUNDED
+}
+
+enum BonusType {
+  WELCOME
+  DEPOSIT
+  FREESPINS
+  CASHBACK
+  RELOAD
+}
+
+enum BonusStatus {
+  ACTIVE
+  COMPLETED
+  EXPIRED
+  CANCELLED
+}
+
+enum GameCategory {
+  SLOTS
+  LIVE_CASINO
+  FISH
+  CRASH
+  TABLE
+  SPORT
+}
+
+enum UserRole {
+  USER
+  ADMIN
+  MODERATOR
+}
+
+// ============================================
+// USUÁRIOS
+// ============================================
+
+model User {
+  id            String     @id @default(cuid())
+  email         String     @unique
+  cpf           String     @unique
+  phone         String     @unique
+  username      String     @unique
+  passwordHash  String
+  fullName      String
+  birthDate     DateTime
+  role          UserRole   @default(USER)
+  kycStatus     KycStatus  @default(NOT_STARTED)
+  status        UserStatus @default(PENDING_VERIFICATION)
+  emailVerified Boolean    @default(false)
+  phoneVerified Boolean    @default(false)
+  twoFactorEnabled Boolean @default(false)
+  twoFactorSecret  String?
+  referralCode  String     @unique @default(cuid())
+  referredById  String?
+  referredBy    User?      @relation("Referrals", fields: [referredById], references: [id])
+  referrals     User[]     @relation("Referrals")
+  lastLoginAt   DateTime?
+  lastLoginIp   String?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  wallet        Wallet?
+  transactions  Transaction[]
+  bets          Bet[]
+  bonuses       UserBonus[]
+  kycDocuments  KycDocument[]
+  sessions      UserSession[]
+  limits        UserLimit[]
+  notifications Notification[]
+  affiliateData AffiliateData?
+
+  @@map("users")
+}
+
+// ============================================
+// SESSÕES
+// ============================================
+
+model UserSession {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id])
+  refreshToken String   @unique
+  ipAddress    String
+  userAgent    String
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+
+  @@map("user_sessions")
+}
+
+// ============================================
+// CARTEIRA
+// ============================================
+
+model Wallet {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id])
+  balance       Decimal  @default(0) @db.Decimal(15, 2)
+  bonusBalance  Decimal  @default(0) @db.Decimal(15, 2)
+  totalDeposited Decimal @default(0) @db.Decimal(15, 2)
+  totalWithdrawn Decimal @default(0) @db.Decimal(15, 2)
+  totalWagered  Decimal  @default(0) @db.Decimal(15, 2)
+  totalWon      Decimal  @default(0) @db.Decimal(15, 2)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  pixKeys       PixKey[]
+
+  @@map("wallets")
+}
+
+model PixKey {
+  id        String   @id @default(cuid())
+  walletId  String
+  wallet    Wallet   @relation(fields: [walletId], references: [id])
+  keyType   String   // CPF, EMAIL, PHONE, RANDOM
+  keyValue  String
+  bankName  String?
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@map("pix_keys")
+}
+
+// ============================================
+// TRANSAÇÕES
+// ============================================
+
+model Transaction {
+  id              String            @id @default(cuid())
+  userId          String
+  user            User              @relation(fields: [userId], references: [id])
+  type            TransactionType
+  status          TransactionStatus @default(PENDING)
+  amount          Decimal           @db.Decimal(15, 2)
+  balanceBefore   Decimal           @db.Decimal(15, 2)
+  balanceAfter    Decimal           @db.Decimal(15, 2)
+  paymentMethod   PaymentMethod?
+  externalId      String?           @unique
+  pixKey          String?
+  pixEndToEndId   String?
+  description     String?
+  metadata        Json?
+  processedAt     DateTime?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@index([userId, createdAt])
+  @@index([status])
+  @@map("transactions")
+}
+
+// ============================================
+// JOGOS
+// ============================================
+
+model Game {
+  id            String       @id @default(cuid())
+  externalId    String       @unique
+  aggregatorId  String
+  name          String
+  slug          String       @unique
+  category      GameCategory
+  provider      String
+  thumbnail     String
+  banner        String?
+  rtp           Float?
+  volatility    String?
+  isActive      Boolean      @default(true)
+  isFeatured    Boolean      @default(false)
+  isNew         Boolean      @default(false)
+  hasDemo       Boolean      @default(true)
+  tags          String[]
+  metadata      Json?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  bets          Bet[]
+  gameSessions  GameSession[]
+
+  @@index([category])
+  @@index([provider])
+  @@index([isActive, isFeatured])
+  @@map("games")
+}
+
+// ============================================
+// SESSÕES DE JOGO (SEAMLESS WALLET)
+// ============================================
+
+model GameSession {
+  id          String   @id @default(cuid())
+  userId      String
+  gameId      String
+  game        Game     @relation(fields: [gameId], references: [id])
+  sessionToken String  @unique
+  currency    String   @default("BRL")
+  isDemo      Boolean  @default(false)
+  startedAt   DateTime @default(now())
+  endedAt     DateTime?
+  metadata    Json?
+
+  bets        Bet[]
+
+  @@map("game_sessions")
+}
+
+// ============================================
+// APOSTAS
+// ============================================
+
+model Bet {
+  id            String     @id @default(cuid())
+  userId        String
+  user          User       @relation(fields: [userId], references: [id])
+  gameId        String
+  game          Game       @relation(fields: [gameId], references: [id])
+  sessionId     String?
+  session       GameSession? @relation(fields: [sessionId], references: [id])
+  roundId       String
+  betAmount     Decimal    @db.Decimal(15, 2)
+  winAmount     Decimal    @default(0) @db.Decimal(15, 2)
+  status        BetStatus  @default(ACTIVE)
+  currency      String     @default("BRL")
+  metadata      Json?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@index([userId, createdAt])
+  @@index([gameId])
+  @@map("bets")
+}
+
+// ============================================
+// KYC
+// ============================================
+
+model KycDocument {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  docType     String    // RG, CNH, PASSAPORTE
+  frontUrl    String
+  backUrl     String?
+  selfieUrl   String?
+  status      KycStatus @default(PENDING)
+  provider    String    @default("idwall")
+  externalId  String?
+  rejectionReason String?
+  reviewedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("kyc_documents")
+}
+
+// ============================================
+// BÔNUS
+// ============================================
+
+model Bonus {
+  id              String    @id @default(cuid())
+  name            String
+  type            BonusType
+  amount          Decimal?  @db.Decimal(15, 2)
+  percentage      Float?
+  maxAmount       Decimal?  @db.Decimal(15, 2)
+  rolloverMultiplier Float  @default(30)
+  minDeposit      Decimal   @default(0) @db.Decimal(15, 2)
+  expiresInDays   Int       @default(7)
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+
+  userBonuses     UserBonus[]
+
+  @@map("bonuses")
+}
+
+model UserBonus {
+  id              String      @id @default(cuid())
+  userId          String
+  user            User        @relation(fields: [userId], references: [id])
+  bonusId         String
+  bonus           Bonus       @relation(fields: [bonusId], references: [id])
+  status          BonusStatus @default(ACTIVE)
+  bonusAmount     Decimal     @db.Decimal(15, 2)
+  remainingRollover Decimal   @db.Decimal(15, 2)
+  expiresAt       DateTime
+  activatedAt     DateTime    @default(now())
+  completedAt     DateTime?
+
+  @@map("user_bonuses")
+}
+
+// ============================================
+// LIMITES DE JOGO RESPONSÁVEL
+// ============================================
+
+model UserLimit {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  limitType String   // DEPOSIT_DAILY, DEPOSIT_WEEKLY, DEPOSIT_MONTHLY, SESSION_TIME
+  amount    Decimal? @db.Decimal(15, 2)
+  duration  Int?     // em minutos para SESSION_TIME
+  expiresAt DateTime?
+  createdAt DateTime @default(now())
+
+  @@unique([userId, limitType])
+  @@map("user_limits")
+}
+
+// ============================================
+// AFILIADOS
+// ============================================
+
+model AffiliateData {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id])
+  commissionType  String   @default("REVSHARE") // CPA ou REVSHARE
+  commissionRate  Float    @default(0.25)
+  totalEarned     Decimal  @default(0) @db.Decimal(15, 2)
+  totalReferrals  Int      @default(0)
+  createdAt       DateTime @default(now())
+
+  @@map("affiliate_data")
+}
+
+// ============================================
+// NOTIFICAÇÕES
+// ============================================
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  title     String
+  body      String
+  type      String
+  isRead    Boolean  @default(false)
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([userId, isRead])
+  @@map("notifications")
+}

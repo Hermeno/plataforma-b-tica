@@ -1,0 +1,136 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Bebas+Neue&display=swap');
+
+@layer base {
+  :root {
+    --font-inter: 'Inter', sans-serif;
+  }
+
+  * {
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-surface text-text-primary;
+    overflow-x: hidden;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-surface;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-surface-elevated rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-brand;
+  }
+}
+
+@layer components {
+  /* ---- BUTTONS ---- */
+  .btn-brand {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold text-sm
+           bg-brand-gradient text-black transition-all duration-200
+           hover:shadow-brand hover:scale-[1.02] active:scale-[0.98]
+           disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold text-sm
+           border border-surface-border text-text-primary bg-transparent transition-all duration-200
+           hover:bg-surface-card hover:border-brand active:scale-[0.98]
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  /* ---- CARDS ---- */
+  .card {
+    @apply bg-surface-card rounded-xl border border-surface-border;
+  }
+
+  .card-hover {
+    @apply card transition-all duration-200 hover:border-brand/40 hover:shadow-card cursor-pointer;
+  }
+
+  /* ---- INPUTS ---- */
+  .input-base {
+    @apply w-full px-4 py-3 bg-surface-input border border-surface-border rounded-lg
+           text-text-primary placeholder-text-muted text-sm
+           focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand/30
+           transition-all duration-200;
+  }
+
+  /* ---- BADGE ---- */
+  .badge-brand {
+    @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-brand text-black;
+  }
+
+  .badge-new {
+    @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-neon-green text-white;
+  }
+
+  /* ---- SKELETON ---- */
+  .skeleton {
+    @apply bg-surface-elevated rounded animate-pulse;
+    background: linear-gradient(90deg, #1F2937 25%, #374151 50%, #1F2937 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+
+  /* ---- GAME CARD ---- */
+  .game-card {
+    @apply relative rounded-xl overflow-hidden cursor-pointer
+           border border-surface-border transition-all duration-300
+           hover:border-brand/50 hover:shadow-brand hover:scale-[1.03];
+  }
+
+  .game-card-overlay {
+    @apply absolute inset-0 bg-game-overlay opacity-0 group-hover:opacity-100
+           transition-opacity duration-300 flex items-end justify-center pb-4;
+  }
+
+  /* ---- SIDEBAR ITEM ---- */
+  .sidebar-item {
+    @apply flex items-center gap-3 px-4 py-3 rounded-lg text-text-secondary text-sm font-medium
+           transition-all duration-200 cursor-pointer
+           hover:bg-surface-card hover:text-text-primary;
+  }
+
+  .sidebar-item.active {
+    @apply bg-brand/10 text-brand border-l-2 border-brand;
+  }
+}
+
+@layer utilities {
+  .text-gradient-brand {
+    @apply bg-brand-gradient bg-clip-text text-transparent;
+  }
+
+  .glow-brand {
+    filter: drop-shadow(0 0 12px rgba(245, 158, 11, 0.6));
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
