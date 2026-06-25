@@ -1,7 +1,11 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common'
 import { PrismaService } from '../common/prisma/prisma.service'
 import { PaymentsService } from '../payments/payments.service'
-import { Decimal } from '@prisma/client/runtime/library'
+
+const DEPOSIT_BONUS_PERCENT = 0.10
+const REFERRAL_BONUS = 50
+const REFERRAL_MIN_DEPOSIT = 100
+const REFERRAL_MIN_WAGERED = 300
 
 @Injectable()
 export class WalletService {
@@ -18,6 +22,8 @@ export class WalletService {
       bonusBalance: Number(wallet.bonusBalance),
       totalDeposited: Number(wallet.totalDeposited),
       totalWithdrawn: Number(wallet.totalWithdrawn),
+      rolloverRequired: Number(wallet.rolloverRequired),
+      rolloverCompleted: Number(wallet.rolloverCompleted),
     }
   }
 
@@ -25,33 +31,10 @@ export class WalletService {
     if (amount < 10) throw new BadRequestException('Valor mínimo de depósito: R$ 10,00')
     if (amount > 50000) throw new BadRequestException('Valor máximo por depósito: R$ 50.000,00')
 
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      include: { wallet: true },
-    })
+    const user = await this.prisma.user.findUnique({ where: { id: userId }, include: { wallet: true } })
     if (!user) throw new NotFoundException('Usuário não encontrado')
 
-    // Verifica limite mensal R$10.000
-    const monthStart = new Date()
-    monthStart.setDate(1)
-    monthStart.setHours(0, 0, 0, 0)
-
-    const monthlyTotal = await this.prisma.transaction.aggregate({
-      where: {
-        userId,
-        type: 'DEPOSIT',
-        status: 'COMPLETED',
-        createdAt: { gte: monthStart },
-      },
-      _sum: { amount: true },
-    })
-
-    const currentMonthly = Number(monthlyTotal._sum.amount ?? 0)
-    if (currentMonthly + amount > 10000) {
-      throw new BadRequestException(`Limite mensal de R$ 10.000 atingido. Disponível: R$ ${(10000 - currentMonthly).toFixed(2)}`)
-    }
-
-    const pix = await this.payments.createPixCharge({ amount, userId, userCpf: user.cpf })
+    const pix = await this.payments.createPixCharge({ amount, userId, userCpf: user.cpf ?? '' })
 
     const transaction = await this.prisma.transaction.create({
       data: {
@@ -64,7 +47,7 @@ export class WalletService {
         paymentMethod: 'PIX',
         externalId: pix.txid,
         description: 'Depósito via PIX',
-        metadata: { pixKey: pix.pixCopiaECola, expiresAt: pix.calendario?.expiracao },
+        metadata: { pixKey: pix.pixCopiaECola },
       },
     })
 
@@ -85,45 +68,46 @@ export class WalletService {
     const wallet = await this.prisma.wallet.findUnique({ where: { userId: transaction.userId } })
     if (!wallet) return
 
+    const bonusAmount = Math.round(amount * DEPOSIT_BONUS_PERCENT * 100) / 100
     const newBalance = Number(wallet.balance) + amount
+    const newRollover = Number(wallet.rolloverRequired) + amount
 
     await this.prisma.$transaction([
       this.prisma.wallet.update({
         where: { userId: transaction.userId },
         data: {
           balance: { increment: amount },
+          bonusBalance: { increment: bonusAmount },
           totalDeposited: { increment: amount },
+          rolloverRequired: { increment: amount },
         },
       }),
       this.prisma.transaction.update({
         where: { id: transaction.id },
-        data: {
-          status: 'COMPLETED',
-          balanceAfter: newBalance,
-          processedAt: new Date(),
-        },
+        data: { status: 'COMPLETED', balanceAfter: newBalance, processedAt: new Date() },
       }),
     ])
+
+    await this.checkAndPayReferralBonus(transaction.userId)
   }
 
   async createWithdrawal(userId: string, amount: number, pixKey: string, pixKeyType: string) {
     if (amount < 20) throw new BadRequestException('Valor mínimo de saque: R$ 20,00')
-    if (amount > 50000) throw new BadRequestException('Valor máximo por saque: R$ 50.000,00')
 
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-      include: { wallet: true },
-    })
+    const user = await this.prisma.user.findUnique({ where: { id: userId }, include: { wallet: true } })
     if (!user) throw new NotFoundException('Usuário não encontrado')
-    if (user.kycStatus !== 'APPROVED') throw new BadRequestException('KYC não aprovado. Verifique sua identidade antes de sacar.')
 
-    const balance = Number(user.wallet?.balance ?? 0)
-    if (balance < amount) throw new BadRequestException('Saldo insuficiente')
+    const wallet = user.wallet!
+    const balance = Number(wallet.balance)
+    const rolloverRequired = Number(wallet.rolloverRequired)
+    const rolloverCompleted = Number(wallet.rolloverCompleted)
 
-    if (pixKeyType === 'CPF') {
-      const pixCpf = pixKey.replace(/\D/g, '')
-      if (pixCpf !== user.cpf) throw new BadRequestException('Saque permitido apenas para chave PIX do seu próprio CPF')
+    if (rolloverCompleted < rolloverRequired) {
+      const remaining = rolloverRequired - rolloverCompleted
+      throw new BadRequestException(`Complete o rollover antes de sacar. Faltam R$ ${remaining.toFixed(2)} em apostas.`)
     }
+
+    if (balance < amount) throw new BadRequestException('Saldo insuficiente')
 
     await this.prisma.$transaction([
       this.prisma.wallet.update({
@@ -175,13 +159,18 @@ export class WalletService {
 
   async debitForBet(userId: string, amount: number, roundId: string): Promise<void> {
     const wallet = await this.prisma.wallet.findUnique({ where: { userId } })
-    if (!wallet || Number(wallet.balance) < amount) {
-      throw new BadRequestException('Saldo insuficiente')
-    }
+    if (!wallet || Number(wallet.balance) < amount) throw new BadRequestException('Saldo insuficiente')
+
     await this.prisma.wallet.update({
       where: { userId },
-      data: { balance: { decrement: amount }, totalWagered: { increment: amount } },
+      data: {
+        balance: { decrement: amount },
+        totalWagered: { increment: amount },
+        rolloverCompleted: { increment: amount },
+      },
     })
+
+    await this.checkAndPayReferralBonus(userId)
   }
 
   async creditForWin(userId: string, amount: number): Promise<void> {
@@ -189,5 +178,42 @@ export class WalletService {
       where: { userId },
       data: { balance: { increment: amount }, totalWon: { increment: amount } },
     })
+  }
+
+  private async checkAndPayReferralBonus(userId: string) {
+    const referral = await this.prisma.referral.findUnique({
+      where: { referredId: userId },
+    })
+    if (!referral || referral.status !== 'PENDING') return
+
+    const wallet = await this.prisma.wallet.findUnique({ where: { userId } })
+    if (!wallet) return
+
+    const totalDeposited = Number(wallet.totalDeposited)
+    const totalWagered = Number(wallet.totalWagered)
+
+    if (totalDeposited >= REFERRAL_MIN_DEPOSIT && totalWagered >= REFERRAL_MIN_WAGERED) {
+      await this.prisma.$transaction([
+        this.prisma.referral.update({
+          where: { referredId: userId },
+          data: { status: 'PAID', bonusPaidAt: new Date(), depositAmount: totalDeposited, wageredAmount: totalWagered },
+        }),
+        this.prisma.wallet.update({
+          where: { userId: referral.referrerId },
+          data: { balance: { increment: REFERRAL_BONUS } },
+        }),
+        this.prisma.transaction.create({
+          data: {
+            userId: referral.referrerId,
+            type: 'BONUS',
+            status: 'COMPLETED',
+            amount: REFERRAL_BONUS,
+            balanceBefore: 0,
+            balanceAfter: REFERRAL_BONUS,
+            description: `Bônus de indicação — R$${REFERRAL_BONUS}`,
+          },
+        }),
+      ])
+    }
   }
 }

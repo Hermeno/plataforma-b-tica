@@ -10,31 +10,31 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // ---- LEAOZINHO COLOR SYSTEM ----
+        // ---- 3633BET COLOR SYSTEM ----
         brand: {
-          DEFAULT: '#F59E0B',   // Dourado principal
-          light: '#FCD34D',     // Dourado claro
-          dark: '#D97706',      // Dourado escuro
-          glow: '#F59E0B33',    // Glow dourado (transparente)
+          DEFAULT: '#007A5A',   // Verde principal
+          light: '#009B72',     // Verde claro
+          dark: '#005C44',      // Verde escuro
+          glow: '#007A5A33',    // Glow verde (transparente)
         },
         surface: {
-          DEFAULT: '#111827',   // Background principal
-          card: '#1F2937',      // Cards e painéis
-          elevated: '#374151',  // Elementos elevados
-          border: '#374151',    // Bordas
-          input: '#1F2937',     // Inputs
+          DEFAULT: '#000000',   // Background principal preto
+          card: '#0D0D0D',      // Cards e painéis
+          elevated: '#1A1A1A',  // Elementos elevados
+          border: '#222222',    // Bordas
+          input: '#0D0D0D',     // Inputs
         },
         neon: {
-          green: '#10B981',     // Verde vitória
+          green: '#007A5A',     // Verde vitória
           red: '#EF4444',       // Vermelho perda
           blue: '#3B82F6',      // Azul info
           purple: '#8B5CF6',    // Roxo especial
         },
         text: {
-          primary: '#F9FAFB',
-          secondary: '#9CA3AF',
+          primary: '#D9D9D9',
+          secondary: '#A6A6A6',
           muted: '#6B7280',
-          inverse: '#111827',
+          inverse: '#000000',
         },
       },
       fontFamily: {
@@ -42,17 +42,17 @@ const config: Config = {
         display: ['Bebas Neue', 'Impact', 'sans-serif'],
       },
       backgroundImage: {
-        'brand-gradient': 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
-        'dark-gradient': 'linear-gradient(180deg, #1F2937 0%, #111827 100%)',
-        'card-gradient': 'linear-gradient(180deg, #1F2937 0%, #111827 100%)',
-        'hero-gradient': 'linear-gradient(135deg, #111827 0%, #1F2937 50%, #111827 100%)',
+        'brand-gradient': 'linear-gradient(135deg, #007A5A 0%, #005C44 100%)',
+        'dark-gradient': 'linear-gradient(180deg, #0D0D0D 0%, #000000 100%)',
+        'card-gradient': 'linear-gradient(180deg, #0D0D0D 0%, #000000 100%)',
+        'hero-gradient': 'linear-gradient(135deg, #000000 0%, #0D0D0D 50%, #000000 100%)',
         'game-overlay': 'linear-gradient(0deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0) 60%)',
       },
       boxShadow: {
-        'brand': '0 0 20px rgba(245, 158, 11, 0.3)',
-        'brand-lg': '0 0 40px rgba(245, 158, 11, 0.4)',
-        'card': '0 4px 24px rgba(0, 0, 0, 0.4)',
-        'inner-brand': 'inset 0 1px 0 rgba(245, 158, 11, 0.2)',
+        'brand': '0 0 20px rgba(0, 122, 90, 0.3)',
+        'brand-lg': '0 0 40px rgba(0, 122, 90, 0.4)',
+        'card': '0 4px 24px rgba(0, 0, 0, 0.6)',
+        'inner-brand': 'inset 0 1px 0 rgba(0, 122, 90, 0.2)',
       },
       animation: {
         'pulse-brand': 'pulse-brand 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',

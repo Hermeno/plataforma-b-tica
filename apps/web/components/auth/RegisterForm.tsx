@@ -9,21 +9,11 @@ import { Eye, EyeOff, Loader2, CheckCircle2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { api } from '@/lib/api'
 import { useAuthStore } from '@/store/authStore'
-import { validateCPF, formatCPF } from '@/lib/utils'
 
 const schema = z.object({
-  fullName: z.string().min(3, 'Nome muito curto').max(100, 'Nome muito longo'),
-  email: z.string().email('E-mail inválido'),
-  cpf: z.string().refine((v) => validateCPF(v), 'CPF inválido'),
-  phone: z.string().min(10, 'Telefone inválido').max(15),
-  birthDate: z.string().refine((v) => {
-    const date = new Date(v)
-    const age = (Date.now() - date.getTime()) / (1000 * 60 * 60 * 24 * 365.25)
-    return age >= 18
-  }, 'Você precisa ter 18 anos ou mais'),
-  password: z.string().min(8, 'Senha deve ter no mínimo 8 caracteres')
-    .regex(/[A-Z]/, 'Deve conter pelo menos uma letra maiúscula')
-    .regex(/[0-9]/, 'Deve conter pelo menos um número'),
+  fullName: z.string().min(3, 'Nome muito curto').max(100),
+  phone: z.string().min(10, 'Telefone inválido'),
+  password: z.string().min(8, 'Mínimo 8 caracteres'),
   confirmPassword: z.string(),
   terms: z.boolean().refine((v) => v, 'Você deve aceitar os termos'),
   referralCode: z.string().optional(),
@@ -34,7 +24,7 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>
 
-const STEPS = ['Dados Pessoais', 'Acesso', 'Confirmação']
+const STEPS = ['Dados', 'Senha', 'Confirmar']
 
 export default function RegisterForm() {
   const router = useRouter()
@@ -43,22 +33,22 @@ export default function RegisterForm() {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
 
-  const { register, handleSubmit, trigger, watch, setValue, formState: { errors } } = useForm<FormData>({
+  const { register, handleSubmit, trigger, setValue, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: { terms: false },
   })
 
-  const cpfValue = watch('cpf')
-
-  const handleCPFChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value.replace(/\D/g, '').slice(0, 11)
-    const formatted = raw.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4')
-    setValue('cpf', formatted)
+    let formatted = raw
+    if (raw.length > 6) formatted = `(${raw.slice(0, 2)}) ${raw.slice(2, 7)}-${raw.slice(7)}`
+    else if (raw.length > 2) formatted = `(${raw.slice(0, 2)}) ${raw.slice(2)}`
+    setValue('phone', formatted)
   }
 
   const nextStep = async () => {
     const fields: (keyof FormData)[][] = [
-      ['fullName', 'email', 'cpf', 'phone', 'birthDate'],
+      ['fullName', 'phone'],
       ['password', 'confirmPassword'],
     ]
     const valid = await trigger(fields[step])
@@ -68,11 +58,11 @@ export default function RegisterForm() {
   const onSubmit = async (data: FormData) => {
     setIsLoading(true)
     try {
-      const payload = { ...data, cpf: data.cpf.replace(/\D/g, '') }
+      const payload = { ...data, phone: data.phone.replace(/\D/g, '') }
       const { data: res } = await api.post('/auth/register', payload)
       setUser(res.user)
       setToken(res.accessToken)
-      toast.success('Conta criada! Bem-vindo à 3633Bet!')
+      toast.success('Conta criada! Você ganhou R$40,00 de bônus!')
       router.push('/lobby')
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Erro ao criar conta')
@@ -88,19 +78,19 @@ export default function RegisterForm() {
         {STEPS.map((label, i) => (
           <div key={i} className="flex items-center flex-1">
             <div className={`flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold transition-all ${
-              i < step ? 'bg-neon-green text-white' : i === step ? 'bg-brand text-black' : 'bg-surface-elevated text-text-muted'
+              i < step ? 'bg-brand text-white' : i === step ? 'bg-brand text-white' : 'bg-surface-elevated text-text-muted'
             }`}>
               {i < step ? <CheckCircle2 className="w-4 h-4" /> : i + 1}
             </div>
             <span className={`ml-1.5 text-xs font-medium hidden sm:block ${i === step ? 'text-text-primary' : 'text-text-muted'}`}>
               {label}
             </span>
-            {i < STEPS.length - 1 && <div className={`flex-1 h-px mx-2 ${i < step ? 'bg-neon-green' : 'bg-surface-border'}`} />}
+            {i < STEPS.length - 1 && <div className={`flex-1 h-px mx-2 ${i < step ? 'bg-brand' : 'bg-surface-border'}`} />}
           </div>
         ))}
       </div>
 
-      {/* Step 0 — Dados Pessoais */}
+      {/* Step 0 — Dados */}
       {step === 0 && (
         <div className="space-y-4 animate-fade-in">
           <div>
@@ -109,33 +99,19 @@ export default function RegisterForm() {
             {errors.fullName && <p className="text-xs text-neon-red mt-1">{errors.fullName.message}</p>}
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1.5">E-mail</label>
-            <input {...register('email')} type="email" placeholder="seu@email.com" className="input-base" />
-            {errors.email && <p className="text-xs text-neon-red mt-1">{errors.email.message}</p>}
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1.5">CPF</label>
-              <input
-                {...register('cpf')}
-                onChange={handleCPFChange}
-                value={cpfValue || ''}
-                placeholder="000.000.000-00"
-                className="input-base"
-                maxLength={14}
-              />
-              {errors.cpf && <p className="text-xs text-neon-red mt-1">{errors.cpf.message}</p>}
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1.5">Telefone</label>
-              <input {...register('phone')} placeholder="(11) 99999-9999" className="input-base" />
-              {errors.phone && <p className="text-xs text-neon-red mt-1">{errors.phone.message}</p>}
-            </div>
+            <label className="block text-sm font-medium text-text-secondary mb-1.5">Telefone</label>
+            <input
+              {...register('phone')}
+              onChange={handlePhoneChange}
+              type="tel"
+              placeholder="(11) 99999-9999"
+              className="input-base"
+            />
+            {errors.phone && <p className="text-xs text-neon-red mt-1">{errors.phone.message}</p>}
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1.5">Data de Nascimento</label>
-            <input {...register('birthDate')} type="date" className="input-base" />
-            {errors.birthDate && <p className="text-xs text-neon-red mt-1">{errors.birthDate.message}</p>}
+            <label className="block text-sm font-medium text-text-secondary mb-1.5">Código de Convite (opcional)</label>
+            <input {...register('referralCode')} placeholder="Código de um amigo" className="input-base" />
           </div>
         </div>
       )}
@@ -163,10 +139,6 @@ export default function RegisterForm() {
             <input {...register('confirmPassword')} type="password" placeholder="Repita a senha" className="input-base" />
             {errors.confirmPassword && <p className="text-xs text-neon-red mt-1">{errors.confirmPassword.message}</p>}
           </div>
-          <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1.5">Código de Indicação (opcional)</label>
-            <input {...register('referralCode')} placeholder="Código de um amigo" className="input-base" />
-          </div>
         </div>
       )}
 
@@ -174,16 +146,17 @@ export default function RegisterForm() {
       {step === 2 && (
         <div className="space-y-4 animate-fade-in">
           <div className="card p-4 bg-brand/5 border-brand/20">
+            <p className="text-sm font-semibold text-brand mb-1">Bônus de boas-vindas</p>
             <p className="text-sm text-text-secondary">
-              Confirme que você tem <strong className="text-text-primary">18 anos ou mais</strong>, reside no Brasil
-              e está de acordo com os <a href="/termos" className="text-brand underline">Termos de Uso</a> e
-              a <a href="/privacidade" className="text-brand underline">Política de Privacidade</a>.
+              Ao criar sua conta você recebe <strong className="text-text-primary">R$40,00</strong> de bônus.
+              Rollover de <strong className="text-text-primary">R$150,00</strong> em apostas para liberar o saque.
             </p>
           </div>
           <label className="flex items-start gap-3 cursor-pointer">
             <input {...register('terms')} type="checkbox" className="mt-1 w-4 h-4 accent-brand rounded" />
             <span className="text-sm text-text-secondary">
-              Li e aceito os Termos de Uso, a Política de Privacidade e confirmo ter 18 anos ou mais.
+              Li e aceito os <a href="/termos" className="text-brand underline">Termos de Uso</a> e a{' '}
+              <a href="/privacidade" className="text-brand underline">Política de Privacidade</a>. Confirmo ter 18 anos ou mais.
             </span>
           </label>
           {errors.terms && <p className="text-xs text-neon-red">{errors.terms.message}</p>}

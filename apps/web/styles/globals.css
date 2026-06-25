@@ -87,7 +87,7 @@
   /* ---- SKELETON ---- */
   .skeleton {
     @apply bg-surface-elevated rounded animate-pulse;
-    background: linear-gradient(90deg, #1F2937 25%, #374151 50%, #1F2937 75%);
+    background: linear-gradient(90deg, #0D0D0D 25%, #1A1A1A 50%, #0D0D0D 75%);
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite;
   }
@@ -122,7 +122,7 @@
   }
 
   .glow-brand {
-    filter: drop-shadow(0 0 12px rgba(245, 158, 11, 0.6));
+    filter: drop-shadow(0 0 12px rgba(0, 122, 90, 0.6));
   }
 
   .scrollbar-hide {

@@ -12,7 +12,7 @@ import { useAuthStore } from '@/store/authStore'
 import { useWalletStore } from '@/store/walletStore'
 
 const schema = z.object({
-  login: z.string().min(3, 'Informe seu e-mail ou CPF'),
+  phone: z.string().min(10, 'Telefone inválido'),
   password: z.string().min(6, 'Senha deve ter no mínimo 6 caracteres'),
 })
 
@@ -25,21 +25,29 @@ export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
 
-  const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
+  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
   })
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value.replace(/\D/g, '').slice(0, 11)
+    let formatted = raw
+    if (raw.length > 6) formatted = `(${raw.slice(0, 2)}) ${raw.slice(2, 7)}-${raw.slice(7)}`
+    else if (raw.length > 2) formatted = `(${raw.slice(0, 2)}) ${raw.slice(2)}`
+    setValue('phone', formatted)
+  }
 
   const onSubmit = async (data: FormData) => {
     setIsLoading(true)
     try {
-      const { data: res } = await api.post('/auth/login', data)
+      const { data: res } = await api.post('/auth/login', { ...data, phone: data.phone.replace(/\D/g, '') })
       setUser(res.user)
       setToken(res.accessToken)
       setBalance(res.wallet.balance)
       toast.success(`Bem-vindo, ${res.user.username}!`)
       router.push('/lobby')
     } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Credenciais inválidas')
+      toast.error(err.response?.data?.message || 'Telefone ou senha inválidos')
     } finally {
       setIsLoading(false)
     }
@@ -49,18 +57,17 @@ export default function LoginForm() {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div>
         <label className="block text-sm font-medium text-text-secondary mb-1.5">
-          E-mail ou CPF
+          Telefone
         </label>
         <input
-          {...register('login')}
-          type="text"
-          placeholder="seu@email.com ou 000.000.000-00"
+          {...register('phone')}
+          onChange={handlePhoneChange}
+          type="tel"
+          placeholder="(11) 99999-9999"
           className="input-base"
-          autoComplete="username"
+          autoComplete="tel"
         />
-        {errors.login && (
-          <p className="text-xs text-neon-red mt-1">{errors.login.message}</p>
-        )}
+        {errors.phone && <p className="text-xs text-neon-red mt-1">{errors.phone.message}</p>}
       </div>
 
       <div>
@@ -86,17 +93,11 @@ export default function LoginForm() {
             {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
         </div>
-        {errors.password && (
-          <p className="text-xs text-neon-red mt-1">{errors.password.message}</p>
-        )}
+        {errors.password && <p className="text-xs text-neon-red mt-1">{errors.password.message}</p>}
       </div>
 
       <button type="submit" disabled={isLoading} className="btn-brand w-full py-3 mt-2">
-        {isLoading ? (
-          <><Loader2 className="w-4 h-4 animate-spin" /> Entrando...</>
-        ) : (
-          'Entrar'
-        )}
+        {isLoading ? <><Loader2 className="w-4 h-4 animate-spin" /> Entrando...</> : 'Entrar'}
       </button>
     </form>
   )

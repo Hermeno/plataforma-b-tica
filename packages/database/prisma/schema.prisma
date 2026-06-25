@@ -99,16 +99,16 @@ enum UserRole {
 
 model User {
   id            String     @id @default(cuid())
-  email         String     @unique
-  cpf           String     @unique
+  email         String?    @unique
+  cpf           String?    @unique
   phone         String     @unique
   username      String     @unique
   passwordHash  String
   fullName      String
-  birthDate     DateTime
+  birthDate     DateTime?
   role          UserRole   @default(USER)
   kycStatus     KycStatus  @default(NOT_STARTED)
-  status        UserStatus @default(PENDING_VERIFICATION)
+  status        UserStatus @default(ACTIVE)
   emailVerified Boolean    @default(false)
   phoneVerified Boolean    @default(false)
   twoFactorEnabled Boolean @default(false)
@@ -157,19 +157,21 @@ model UserSession {
 // ============================================
 
 model Wallet {
-  id            String   @id @default(cuid())
-  userId        String   @unique
-  user          User     @relation(fields: [userId], references: [id])
-  balance       Decimal  @default(0) @db.Decimal(15, 2)
-  bonusBalance  Decimal  @default(0) @db.Decimal(15, 2)
-  totalDeposited Decimal @default(0) @db.Decimal(15, 2)
-  totalWithdrawn Decimal @default(0) @db.Decimal(15, 2)
-  totalWagered  Decimal  @default(0) @db.Decimal(15, 2)
-  totalWon      Decimal  @default(0) @db.Decimal(15, 2)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id])
+  balance         Decimal  @default(0) @db.Decimal(15, 2)
+  bonusBalance    Decimal  @default(0) @db.Decimal(15, 2)
+  totalDeposited  Decimal  @default(0) @db.Decimal(15, 2)
+  totalWithdrawn  Decimal  @default(0) @db.Decimal(15, 2)
+  totalWagered    Decimal  @default(0) @db.Decimal(15, 2)
+  totalWon        Decimal  @default(0) @db.Decimal(15, 2)
+  rolloverRequired Decimal @default(0) @db.Decimal(15, 2)
+  rolloverCompleted Decimal @default(0) @db.Decimal(15, 2)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
-  pixKeys       PixKey[]
+  pixKeys         PixKey[]
 
   @@map("wallets")
 }
@@ -395,6 +397,25 @@ model AffiliateData {
 // ============================================
 // NOTIFICAÇÕES
 // ============================================
+
+// ============================================
+// REFERRALS (CONVITES)
+// ============================================
+
+model Referral {
+  id              String   @id @default(cuid())
+  referrerId      String
+  referredId      String   @unique
+  status          String   @default("PENDING") // PENDING, QUALIFIED, PAID
+  depositAmount   Decimal  @default(0) @db.Decimal(15, 2)
+  wageredAmount   Decimal  @default(0) @db.Decimal(15, 2)
+  bonusPaidAt     DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([referrerId])
+  @@map("referrals")
+}
 
 model Notification {
   id        String   @id @default(cuid())
