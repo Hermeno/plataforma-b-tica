@@ -19,9 +19,8 @@ export default function Header() {
       <div className="flex items-center justify-between h-16 px-4 lg:px-6 max-w-[1920px] mx-auto">
 
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 flex-shrink-0">
-          <div className="w-9 h-9 rounded-lg bg-brand-gradient shadow-brand" />
-          <span className="font-display text-2xl text-gradient-brand tracking-wide hidden sm:block">
+        <Link href="/" className="flex items-center flex-shrink-0">
+          <span className="font-display text-2xl text-gradient-brand tracking-wide">
             3633BET
           </span>
         </Link>

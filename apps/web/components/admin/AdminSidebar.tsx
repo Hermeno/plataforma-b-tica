@@ -26,14 +26,9 @@ export default function AdminSidebar() {
   return (
     <aside className="w-60 bg-surface border-r border-surface-border flex flex-col flex-shrink-0">
       <div className="p-4 border-b border-surface-border">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-brand-gradient flex items-center justify-center">
-            <span className="text-black font-display text-base">L</span>
-          </div>
-          <div>
-            <p className="text-sm font-bold text-text-primary">3633Bet</p>
-            <p className="text-xs text-brand">Painel Admin</p>
-          </div>
+        <div className="flex flex-col">
+          <span className="font-display text-lg text-gradient-brand">3633BET</span>
+          <p className="text-xs text-brand">Painel Admin</p>
         </div>
       </div>
 

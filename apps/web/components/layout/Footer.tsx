@@ -32,9 +32,7 @@ export default function Footer() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
-            <Link href="/" className="inline-flex items-center gap-2 mb-4">
-              <div className="w-9 h-9 rounded-lg bg-brand-gradient flex items-center justify-center">
-              </div>
+            <Link href="/" className="inline-flex items-center mb-4">
               <span className="font-display text-xl text-gradient-brand">3633BET</span>
             </Link>
             <p className="text-xs text-text-muted leading-relaxed">
