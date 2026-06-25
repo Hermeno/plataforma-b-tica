@@ -56,7 +56,7 @@ export default function HeroBanner() {
       {/* Content */}
       <div className="relative z-10 flex flex-col justify-center h-full px-6 sm:px-10">
         <span className={cn('text-xs font-semibold uppercase tracking-widest mb-1', banner.accent)}>
-          Leaozinho Casino
+          3633Bet Casino
         </span>
         <h2 className="text-xl sm:text-3xl font-bold text-text-primary leading-tight max-w-sm">
           {banner.title}

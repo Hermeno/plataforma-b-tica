@@ -72,7 +72,7 @@ export default function RegisterForm() {
       const { data: res } = await api.post('/auth/register', payload)
       setUser(res.user)
       setToken(res.accessToken)
-      toast.success('Conta criada! Bem-vindo ao Leaozinho! 🦁')
+      toast.success('Conta criada! Bem-vindo à 3633Bet!')
       router.push('/lobby')
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Erro ao criar conta')
@@ -203,7 +203,7 @@ export default function RegisterForm() {
           </button>
         ) : (
           <button type="submit" disabled={isLoading} className="btn-brand flex-1 py-3">
-            {isLoading ? <><Loader2 className="w-4 h-4 animate-spin" /> Criando conta...</> : 'Criar Minha Conta 🦁'}
+            {isLoading ? <><Loader2 className="w-4 h-4 animate-spin" /> Criando conta...</> : 'Criar Minha Conta'}
           </button>
         )}
       </div>

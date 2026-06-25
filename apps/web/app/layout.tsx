@@ -8,16 +8,16 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 
 export const metadata: Metadata = {
   title: {
-    default: 'Leaozinho | Cassino Online',
-    template: '%s | Leaozinho',
+    default: '3633Bet | Cassino Online',
+    template: '%s | 3633Bet',
   },
   description: 'O melhor cassino online do Brasil. Jogue slots, fish games e muito mais com depósito via PIX.',
-  keywords: ['cassino online', 'apostas', 'slots', 'pix', 'bônus', 'leaozinho'],
+  keywords: ['cassino online', 'apostas', 'slots', 'pix', 'bônus', '3633bet'],
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
   openGraph: {
     type: 'website',
     locale: 'pt_BR',
-    siteName: 'Leaozinho',
+    siteName: '3633Bet',
   },
   robots: {
     index: true,

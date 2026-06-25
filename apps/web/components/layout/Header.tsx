@@ -21,10 +21,10 @@ export default function Header() {
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 flex-shrink-0">
           <div className="w-9 h-9 rounded-lg bg-brand-gradient flex items-center justify-center shadow-brand">
-            <span className="text-black font-display text-lg">L</span>
+            <span className="text-black font-display text-lg">3</span>
           </div>
           <span className="font-display text-2xl text-gradient-brand tracking-wide hidden sm:block">
-            LEAOZINHO
+            3633BET
           </span>
         </Link>
 

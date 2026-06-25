@@ -34,9 +34,9 @@ export default function Footer() {
           <div className="col-span-2 md:col-span-1">
             <Link href="/" className="inline-flex items-center gap-2 mb-4">
               <div className="w-9 h-9 rounded-lg bg-brand-gradient flex items-center justify-center">
-                <span className="text-black font-display text-lg">L</span>
+                <span className="text-black font-display text-lg">3</span>
               </div>
-              <span className="font-display text-xl text-gradient-brand">LEAOZINHO</span>
+              <span className="font-display text-xl text-gradient-brand">3633BET</span>
             </Link>
             <p className="text-xs text-text-muted leading-relaxed">
               Plataforma de cassino online regulamentada para maiores de 18 anos.
@@ -101,7 +101,7 @@ export default function Footer() {
         <div className="border-t border-surface-border pt-6">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <p className="text-xs text-text-muted">
-              © {new Date().getFullYear()} Leaozinho. Todos os direitos reservados.
+              © {new Date().getFullYear()} 3633Bet. Todos os direitos reservados.
               CNPJ: 00.000.000/0001-00
             </p>
             <p className="text-xs text-text-muted">

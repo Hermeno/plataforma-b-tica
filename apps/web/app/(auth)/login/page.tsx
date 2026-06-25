@@ -16,7 +16,7 @@ export default function LoginPage() {
             </div>
           </Link>
           <h1 className="text-2xl font-bold text-text-primary mt-4">Bem-vindo de volta!</h1>
-          <p className="text-text-muted text-sm mt-1">Entre na sua conta Leaozinho</p>
+          <p className="text-text-muted text-sm mt-1">Entre na sua conta 3633Bet</p>
         </div>
 
         <div className="card p-6 shadow-card">

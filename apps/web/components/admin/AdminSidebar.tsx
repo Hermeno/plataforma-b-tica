@@ -31,7 +31,7 @@ export default function AdminSidebar() {
             <span className="text-black font-display text-base">L</span>
           </div>
           <div>
-            <p className="text-sm font-bold text-text-primary">Leaozinho</p>
+            <p className="text-sm font-bold text-text-primary">3633Bet</p>
             <p className="text-xs text-brand">Painel Admin</p>
           </div>
         </div>
