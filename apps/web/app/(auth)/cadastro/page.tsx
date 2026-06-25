@@ -10,9 +10,7 @@ export default function RegisterPage() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2">
-            <div className="w-12 h-12 rounded-xl bg-brand-gradient flex items-center justify-center shadow-brand-lg">
-              <span className="text-black font-display text-2xl">L</span>
-            </div>
+            <div className="w-12 h-12 rounded-xl bg-brand-gradient shadow-brand-lg" />
           </Link>
           <h1 className="text-2xl font-bold text-text-primary mt-4">Criar sua conta</h1>
           <p className="text-text-muted text-sm mt-1">Cadastre-se e ganhe 100% até R$ 500 de bônus</p>

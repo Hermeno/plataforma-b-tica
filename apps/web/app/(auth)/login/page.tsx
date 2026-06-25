@@ -11,9 +11,7 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2">
-            <div className="w-12 h-12 rounded-xl bg-brand-gradient flex items-center justify-center shadow-brand-lg">
-              <span className="text-black font-display text-2xl">L</span>
-            </div>
+            <div className="w-12 h-12 rounded-xl bg-brand-gradient shadow-brand-lg" />
           </Link>
           <h1 className="text-2xl font-bold text-text-primary mt-4">Bem-vindo de volta!</h1>
           <p className="text-text-muted text-sm mt-1">Entre na sua conta 3633Bet</p>

@@ -34,7 +34,6 @@ export default function Footer() {
           <div className="col-span-2 md:col-span-1">
             <Link href="/" className="inline-flex items-center gap-2 mb-4">
               <div className="w-9 h-9 rounded-lg bg-brand-gradient flex items-center justify-center">
-                <span className="text-black font-display text-lg">3</span>
               </div>
               <span className="font-display text-xl text-gradient-brand">3633BET</span>
             </Link>
