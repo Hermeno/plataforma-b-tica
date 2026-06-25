@@ -61,7 +61,7 @@ export default function RegisterForm() {
       const payload = { ...data, phone: data.phone.replace(/\D/g, '') }
       const { data: res } = await api.post('/auth/register', payload)
       setUser(res.user)
-      setToken(res.accessToken)
+      setToken(res.accessToken, res.refreshToken)
       toast.success('Conta criada! Você ganhou R$40,00 de bônus!')
       router.push('/lobby')
     } catch (err: any) {

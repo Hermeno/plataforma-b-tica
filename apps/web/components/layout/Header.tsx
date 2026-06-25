@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
-import { Search, Bell, Wallet, ChevronDown, LogOut, User, Menu, X } from 'lucide-react'
+import { Search, Bell, Wallet, ChevronDown, LogOut, User, Menu, X, LayoutDashboard } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { useWalletStore } from '@/store/walletStore'
 import { formatBRL } from '@/lib/utils'
@@ -89,8 +89,13 @@ export default function Header() {
                   <div className="absolute right-0 top-12 w-52 card shadow-card py-1 z-50 animate-slide-down">
                     <div className="px-4 py-3 border-b border-surface-border">
                       <p className="text-sm font-semibold text-text-primary">{user.username}</p>
-                      <p className="text-xs text-text-muted">{user.email}</p>
+                      <p className="text-xs text-text-muted">{user.role === 'ADMIN' ? 'Administrador' : user.phone ?? user.email}</p>
                     </div>
+                    {user.role === 'ADMIN' && (
+                      <Link href="/admin" className="flex items-center gap-3 px-4 py-3 hover:bg-surface-elevated text-sm text-brand font-medium transition-colors">
+                        <LayoutDashboard className="w-4 h-4" /> Painel Admin
+                      </Link>
+                    )}
                     <Link href="/perfil" className="flex items-center gap-3 px-4 py-3 hover:bg-surface-elevated text-sm text-text-secondary hover:text-text-primary transition-colors">
                       <User className="w-4 h-4" /> Meu Perfil
                     </Link>

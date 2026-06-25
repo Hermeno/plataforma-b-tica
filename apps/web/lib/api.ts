@@ -17,16 +17,19 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const original = error.config
-    if (error.response?.status === 401 && !original._retry) {
+    const isAuthEndpoint = original?.url?.includes('/auth/')
+    if (error.response?.status === 401 && !original._retry && !isAuthEndpoint) {
       original._retry = true
       try {
-        const { data } = await axios.post(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1'}/auth/refresh`, {}, { withCredentials: true })
+        const refreshToken = useAuthStore.getState().refreshToken
+        if (!refreshToken) throw new Error('no token')
+        const { data } = await axios.post(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1'}/auth/refresh`, { refreshToken })
         useAuthStore.getState().setToken(data.accessToken)
         original.headers.Authorization = `Bearer ${data.accessToken}`
         return api(original)
       } catch {
         useAuthStore.getState().logout()
-        window.location.href = '/login'
+        if (typeof window !== 'undefined') window.location.href = '/login'
       }
     }
     return Promise.reject(error)

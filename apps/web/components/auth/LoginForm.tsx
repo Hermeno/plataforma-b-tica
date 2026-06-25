@@ -42,7 +42,7 @@ export default function LoginForm() {
     try {
       const { data: res } = await api.post('/auth/login', { ...data, phone: data.phone.replace(/\D/g, '') })
       setUser(res.user)
-      setToken(res.accessToken)
+      setToken(res.accessToken, res.refreshToken)
       setBalance(res.wallet.balance)
       toast.success(`Bem-vindo, ${res.user.username}!`)
       router.push('/lobby')

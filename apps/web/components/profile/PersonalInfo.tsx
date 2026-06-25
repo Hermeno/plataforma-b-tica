@@ -10,8 +10,8 @@ export default function PersonalInfo() {
 
   const fields = [
     { label: 'Nome completo', value: user.fullName, icon: User },
-    { label: 'E-mail', value: user.email, icon: Mail },
-    { label: 'CPF', value: maskCPF(user.cpf), icon: CreditCard },
+    { label: 'E-mail', value: user.email ?? '—', icon: Mail },
+    { label: 'CPF', value: user.cpf ? maskCPF(user.cpf) : '—', icon: CreditCard },
   ]
 
   return (

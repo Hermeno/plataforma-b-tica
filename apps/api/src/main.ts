@@ -14,10 +14,12 @@ async function bootstrap() {
   app.use(helmet())
   app.use(compression())
 
+  const rawOrigin = config.get<string>('APP_URL', 'http://localhost:3000').replace(/\/$/, '')
   app.enableCors({
-    origin: config.get('APP_URL', 'http://localhost:3000'),
+    origin: [rawOrigin, rawOrigin + '/'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
   })
 
   app.setGlobalPrefix('api/v1')
