@@ -9,20 +9,20 @@ import { cn } from '@/lib/utils'
 const BANNERS = [
   {
     id: 1,
-    image: '/banner-indicacao.png',
+    image: '/banner-indicacao.jpeg',
     alt: 'Convide Amigos e Ganhe R$50',
     href: '/afiliados',
   },
   {
     id: 2,
-    image: '/banner-deposito.png',
+    image: '/banner-deposito.jpeg',
     alt: '10% a mais sobre cada depósito',
     href: '/carteira?aba=deposito',
   },
   {
     id: 3,
-    image: '/banner-retorno.png',
-    alt: '5% de Retorno Semanal',
+    image: '/banner-retorno.jpeg',
+    alt: '5% de Retorno Semanal — Grandes Ganhos',
     href: '/bonus',
   },
 ]
@@ -43,7 +43,7 @@ export default function HeroBanner() {
   return (
     <div className="relative w-full rounded-xl overflow-hidden mb-6 border border-surface-border bg-surface-card">
       {/* Slides */}
-      <div className="relative w-full" style={{ aspectRatio: '970/486' }}>
+      <div className="relative w-full" style={{ aspectRatio: '16/6.3' }}>
         {BANNERS.map((banner, i) => (
           <Link
             key={banner.id}
