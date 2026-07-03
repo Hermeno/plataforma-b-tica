@@ -8,10 +8,10 @@ export default function AdminConfigPage() {
   const [saving, setSaving] = useState(false)
 
   const [config, setConfig] = useState({
-    minDeposit: '20',
-    maxDeposit: '50000',
+    minDeposit: '10',
+    maxDeposit: '1000',
     minWithdraw: '20',
-    maxWithdraw: '10000',
+    maxWithdraw: '1000',
     welcomeBonus: '40',
     welcomeRollover: '150',
     depositBonusPct: '10',

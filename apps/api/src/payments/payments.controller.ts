@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Headers, HttpCode, Logger } from '@nestjs/common'
+import { Controller, Post, Body, HttpCode, Logger } from '@nestjs/common'
 import { PaymentsService } from './payments.service'
 import { WalletService } from '../wallet/wallet.service'
 
@@ -11,13 +11,13 @@ export class PaymentsController {
     private wallet: WalletService,
   ) {}
 
-  @Post('webhook/pix')
+  @Post('webhook/vexopay')
   @HttpCode(200)
-  async pixWebhook(@Body() body: any) {
-    this.logger.log('PIX webhook recebido')
-    const data = await this.payments.validatePixWebhook(body)
+  async vexoWebhook(@Body() body: any) {
+    this.logger.log(`VexoPay webhook: ${body?.event}`)
+    const data = this.payments.validateWebhook(body)
     if (data) {
-      await this.wallet.confirmDeposit(data.txid, data.amount)
+      await this.wallet.confirmDeposit(data.transactionId, data.amount)
     }
     return { ok: true }
   }

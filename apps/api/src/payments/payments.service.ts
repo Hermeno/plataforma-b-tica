@@ -1,114 +1,73 @@
-import { Injectable, Logger } from '@nestjs/common'
+import { Injectable, Logger, InternalServerErrorException } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
-import axios from 'axios'
-import * as fs from 'fs'
-import * as https from 'https'
+import axios, { AxiosInstance } from 'axios'
 
 interface PixChargeParams {
   amount: number
   userId: string
-  userCpf: string
+  userName: string
 }
 
 @Injectable()
 export class PaymentsService {
   private readonly logger = new Logger(PaymentsService.name)
-  private accessToken: string | null = null
-  private tokenExpiry: Date | null = null
+  private readonly http: AxiosInstance
 
-  constructor(private config: ConfigService) {}
-
-  async createPixCharge({ amount, userId, userCpf }: PixChargeParams) {
-    const token = await this.getEfiToken()
-    const isSandbox = this.config.get('EFI_SANDBOX', 'true') === 'true'
-    const baseUrl = isSandbox
-      ? 'https://pix-h.api.efipay.com.br'
-      : 'https://pix.api.efipay.com.br'
-
-    const agent = this.getHttpsAgent()
-    const txid = this.generateTxid()
-
-    const payload = {
-      calendario: { expiracao: 3600 },
-      devedor: { cpf: userCpf },
-      valor: { original: amount.toFixed(2) },
-      chave: this.config.get('EFI_PIX_KEY'),
-      infoAdicionais: [{ nome: 'Plataforma', valor: 'Leaozinho' }],
-    }
-
-    const { data } = await axios.put(`${baseUrl}/v2/cob/${txid}`, payload, {
-      httpsAgent: agent,
-      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+  constructor(private config: ConfigService) {
+    this.http = axios.create({
+      baseURL: 'https://www.vexopay.com.br/api',
+      headers: {
+        'Content-Type': 'application/json',
+        ci: config.get('VEXOPAY_CLIENT_ID', ''),
+        cs: config.get('VEXOPAY_CLIENT_SECRET', ''),
+      },
+      timeout: 15000,
     })
+  }
 
-    const qrData = await axios.get(`${baseUrl}/v2/loc/${data.loc.id}/qrcode`, {
-      httpsAgent: agent,
-      headers: { Authorization: `Bearer ${token}` },
-    })
+  async createPixCharge({ amount, userId, userName }: PixChargeParams) {
+    try {
+      const { data } = await this.http.post('/gateway/pix-create', {
+        amount,
+        payerName: userName || '3633BET User',
+        payerDocument: '00000000000',
+        description: `Deposito 3633BET #${userId.slice(-8)}`,
+      })
 
-    return {
-      txid: data.txid,
-      pixCopiaECola: qrData.data.pixCopiaECola,
-      qrCode: qrData.data.imagemQrcode,
-      calendario: data.calendario,
+      return {
+        transactionId: data.transactionId,
+        pixCopiaECola: data.pixCopiaECola ?? data.copyPaste ?? '',
+        qrCode: data.qrCode ?? data.qrCodeBase64 ?? '',
+        paymentLink: data.paymentLink ?? '',
+        expiresAt: data.expiresAt ?? '',
+        status: data.status ?? 'pending',
+      }
+    } catch (err: any) {
+      this.logger.error('VexoPay PIX error', err?.response?.data ?? err.message)
+      throw new InternalServerErrorException('Erro ao gerar PIX. Tente novamente.')
     }
   }
 
-  async validatePixWebhook(payload: any): Promise<{ txid: string; amount: number } | null> {
+  async getPixStatus(transactionId: string): Promise<{ status: string; amount?: number }> {
     try {
-      const pix = payload?.pix?.[0]
-      if (!pix) return null
-      return { txid: pix.txid, amount: parseFloat(pix.valor) }
+      const { data } = await this.http.get('/gateway/pix-status', {
+        params: { transactionId },
+      })
+      return { status: data.status, amount: data.amount }
+    } catch (err: any) {
+      this.logger.error('VexoPay status error', err?.response?.data ?? err.message)
+      return { status: 'unknown' }
+    }
+  }
+
+  validateWebhook(body: any): { transactionId: string; amount: number } | null {
+    try {
+      if (body?.event !== 'payment.completed') return null
+      const { transactionId, amount } = body?.data ?? {}
+      if (!transactionId || !amount) return null
+      return { transactionId, amount: Number(amount) }
     } catch {
       return null
     }
-  }
-
-  private async getEfiToken(): Promise<string> {
-    if (this.accessToken && this.tokenExpiry && new Date() < this.tokenExpiry) {
-      return this.accessToken
-    }
-
-    const clientId = this.config.get('EFI_CLIENT_ID')
-    const clientSecret = this.config.get('EFI_CLIENT_SECRET')
-    const isSandbox = this.config.get('EFI_SANDBOX', 'true') === 'true'
-    const baseUrl = isSandbox
-      ? 'https://cobrancas-h.api.efipay.com.br'
-      : 'https://cobrancas.api.efipay.com.br'
-
-    const agent = this.getHttpsAgent()
-    const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString('base64')
-
-    const { data } = await axios.post(
-      `${baseUrl}/v1/authorize`,
-      { grant_type: 'client_credentials' },
-      {
-        httpsAgent: agent,
-        headers: {
-          Authorization: `Basic ${credentials}`,
-          'Content-Type': 'application/json',
-        },
-      }
-    )
-
-    this.accessToken = data.access_token
-    this.tokenExpiry = new Date(Date.now() + (data.expires_in - 60) * 1000)
-    return this.accessToken!
-  }
-
-  private getHttpsAgent() {
-    const certPath = this.config.get('EFI_CERT_PATH')
-    if (certPath && fs.existsSync(certPath)) {
-      return new https.Agent({ pfx: fs.readFileSync(certPath), passphrase: '' })
-    }
-    return new https.Agent({ rejectUnauthorized: false })
-  }
-
-  private generateTxid(): string {
-    return Array.from({ length: 35 }, () =>
-      'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'.charAt(
-        Math.floor(Math.random() * 62)
-      )
-    ).join('')
   }
 }

@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { Shield, Lock, HeartHandshake } from 'lucide-react'
 
 const LINKS = {
@@ -33,7 +34,7 @@ export default function Footer() {
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
             <Link href="/" className="inline-flex items-center mb-4">
-              <span className="font-display text-xl text-gradient-brand">3633BET</span>
+              <Image src="/logo.png" alt="3633BET" width={48} height={48} className="rounded-xl" />
             </Link>
             <p className="text-xs text-text-muted leading-relaxed">
               Plataforma de cassino online regulamentada para maiores de 18 anos.

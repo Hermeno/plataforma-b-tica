@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, Users, Wallet, ShieldCheck,
@@ -26,9 +27,9 @@ export default function AdminSidebar() {
   return (
     <aside className="w-60 bg-surface border-r border-surface-border flex flex-col flex-shrink-0">
       <div className="p-4 border-b border-surface-border">
-        <div className="flex flex-col">
-          <span className="font-display text-lg text-gradient-brand">3633BET</span>
-          <p className="text-xs text-brand">Painel Admin</p>
+        <div className="flex items-center gap-3">
+          <Image src="/logo.png" alt="3633BET" width={36} height={36} className="rounded-lg flex-shrink-0" />
+          <p className="text-xs text-brand font-semibold">Painel Admin</p>
         </div>
       </div>
 

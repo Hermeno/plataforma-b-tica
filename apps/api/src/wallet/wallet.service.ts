@@ -29,12 +29,16 @@ export class WalletService {
 
   async createPixDeposit(userId: string, amount: number) {
     if (amount < 10) throw new BadRequestException('Valor mínimo de depósito: R$ 10,00')
-    if (amount > 50000) throw new BadRequestException('Valor máximo por depósito: R$ 50.000,00')
+    if (amount > 1000) throw new BadRequestException('Valor máximo por depósito: R$ 1.000,00')
 
     const user = await this.prisma.user.findUnique({ where: { id: userId }, include: { wallet: true } })
     if (!user) throw new NotFoundException('Usuário não encontrado')
 
-    const pix = await this.payments.createPixCharge({ amount, userId, userCpf: user.cpf ?? '' })
+    const pix = await this.payments.createPixCharge({
+      amount,
+      userId,
+      userName: user.fullName,
+    })
 
     const transaction = await this.prisma.transaction.create({
       data: {
@@ -45,15 +49,15 @@ export class WalletService {
         balanceBefore: Number(user.wallet?.balance ?? 0),
         balanceAfter: Number(user.wallet?.balance ?? 0),
         paymentMethod: 'PIX',
-        externalId: pix.txid,
+        externalId: pix.transactionId,
         description: 'Depósito via PIX',
         metadata: { pixKey: pix.pixCopiaECola },
       },
     })
 
     return {
-      transactionId: transaction.id,
-      txid: pix.txid,
+      transactionId: pix.transactionId,
+      txid: pix.transactionId,
       pixCopiaECola: pix.pixCopiaECola,
       qrCode: pix.qrCode,
       expiresIn: 3600,

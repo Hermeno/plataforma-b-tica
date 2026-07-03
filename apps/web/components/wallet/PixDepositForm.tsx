@@ -7,7 +7,7 @@ import { api } from '@/lib/api'
 import { formatBRL } from '@/lib/utils'
 import Image from 'next/image'
 
-const QUICK_VALUES = [20, 50, 100, 200, 500, 1000]
+const QUICK_VALUES = [10, 20, 50, 100, 200, 500]
 
 interface PixData {
   transactionId: string
@@ -28,7 +28,7 @@ export default function PixDepositForm() {
   const handleDeposit = async () => {
     const value = parseFloat(amount.replace(',', '.'))
     if (!value || value < 10) return toast.error('Valor mínimo: R$ 10,00')
-    if (value > 50000) return toast.error('Valor máximo: R$ 50.000,00')
+    if (value > 1000) return toast.error('Valor máximo: R$ 1.000,00')
 
     setLoading(true)
     try {
@@ -167,11 +167,11 @@ export default function PixDepositForm() {
             onChange={(e) => setAmount(e.target.value)}
             placeholder="0,00"
             min={10}
-            max={50000}
+            max={1000}
             className="input-base pl-10 text-lg font-semibold"
           />
         </div>
-        <p className="text-xs text-text-muted mt-1">Mín: R$ 10 • Máx: R$ 50.000 • Limite mensal: R$ 10.000</p>
+        <p className="text-xs text-text-muted mt-1">Mín: R$ 10 • Máx: R$ 1.000 por transação</p>
       </div>
 
       {/* Bonus info */}
@@ -186,7 +186,7 @@ export default function PixDepositForm() {
 
       <button
         onClick={handleDeposit}
-        disabled={loading || !amount || parseFloat(amount) < 10}
+        disabled={loading || !amount || parseFloat(amount) < 10 || parseFloat(amount) > 1000}
         className="btn-brand w-full py-3.5 text-base"
       >
         {loading ? (

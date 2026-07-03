@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { useState } from 'react'
 import { Search, Bell, Wallet, ChevronDown, LogOut, User, Menu, X, LayoutDashboard } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
@@ -20,9 +21,7 @@ export default function Header() {
 
         {/* Logo */}
         <Link href="/" className="flex items-center flex-shrink-0">
-          <span className="font-display text-2xl text-gradient-brand tracking-wide">
-            3633BET
-          </span>
+          <Image src="/logo.png" alt="3633BET" width={44} height={44} className="rounded-xl" priority />
         </Link>
 
         {/* Search bar — desktop */}
