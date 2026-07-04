@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import RegisterForm from '@/components/auth/RegisterForm'
 import Link from 'next/link'
 import Image from 'next/image'
+import { Suspense } from 'react'
 
 export const metadata: Metadata = { title: 'Criar Conta' }
 
@@ -18,7 +19,9 @@ export default function RegisterPage() {
         </div>
 
         <div className="card p-6 shadow-card">
-          <RegisterForm />
+          <Suspense fallback={<div className="h-64 flex items-center justify-center"><div className="w-6 h-6 border-2 border-brand border-t-transparent rounded-full animate-spin" /></div>}>
+            <RegisterForm />
+          </Suspense>
         </div>
 
         <p className="text-center text-sm text-text-muted mt-6">

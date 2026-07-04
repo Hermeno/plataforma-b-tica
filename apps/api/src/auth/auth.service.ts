@@ -8,6 +8,7 @@ import { LoginDto } from './dto/login.dto'
 
 const WELCOME_BONUS_AMOUNT = 40
 const WELCOME_BONUS_ROLLOVER = 150
+const REFERRAL_BONUS = 50
 
 @Injectable()
 export class AuthService {
@@ -48,7 +49,17 @@ export class AuthService {
 
     if (referrerId) {
       await this.prisma.referral.create({
-        data: { referrerId, referredId: user.id },
+        data: {
+          referrerId,
+          referredId: user.id,
+          status: 'COMPLETED',
+          bonusPaidAt: new Date(),
+        },
+      })
+      // Credita R$50 imediatamente na carteira do indicador (saldo real)
+      await this.prisma.wallet.update({
+        where: { userId: referrerId },
+        data: { balance: { increment: REFERRAL_BONUS } },
       })
     }
 
@@ -58,6 +69,7 @@ export class AuthService {
     return {
       user: this.sanitizeUser(user),
       wallet: { balance: Number(user.wallet?.balance ?? 0), bonusBalance: Number(user.wallet?.bonusBalance ?? 0) },
+      referralBonus: !!referrerId,
       ...tokens,
     }
   }

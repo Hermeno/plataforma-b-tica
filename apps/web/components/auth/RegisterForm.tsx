@@ -1,11 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { useRouter } from 'next/navigation'
-import { Eye, EyeOff, Loader2, CheckCircle2 } from 'lucide-react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { Eye, EyeOff, Loader2, CheckCircle2, Gift } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { api } from '@/lib/api'
 import { useAuthStore } from '@/store/authStore'
@@ -28,15 +28,26 @@ const STEPS = ['Dados', 'Senha', 'Confirmar']
 
 export default function RegisterForm() {
   const router = useRouter()
+  const params = useSearchParams()
   const { setUser, setToken } = useAuthStore()
   const [step, setStep] = useState(0)
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [hasReferral, setHasReferral] = useState(false)
 
-  const { register, handleSubmit, trigger, setValue, formState: { errors } } = useForm<FormData>({
+  const { register, handleSubmit, trigger, setValue, watch, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: { terms: false },
   })
+
+  // Auto-preenche o código de convite da URL (?ref=CODIGO)
+  useEffect(() => {
+    const ref = params.get('ref')
+    if (ref) {
+      setValue('referralCode', ref)
+      setHasReferral(true)
+    }
+  }, [params, setValue])
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value.replace(/\D/g, '').slice(0, 11)
@@ -62,7 +73,11 @@ export default function RegisterForm() {
       const { data: res } = await api.post('/auth/register', payload)
       setUser(res.user)
       setToken(res.accessToken, res.refreshToken)
-      toast.success('Conta criada! Você ganhou R$40,00 de bônus!')
+      if (res.referralBonus) {
+        toast.success('Conta criada! Você ganhou R$40,00 de bônus de boas-vindas!')
+      } else {
+        toast.success('Conta criada! Você ganhou R$40,00 de bônus!')
+      }
       router.push('/lobby')
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Erro ao criar conta')
@@ -70,6 +85,8 @@ export default function RegisterForm() {
       setIsLoading(false)
     }
   }
+
+  const referralCode = watch('referralCode')
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -110,8 +127,22 @@ export default function RegisterForm() {
             {errors.phone && <p className="text-xs text-neon-red mt-1">{errors.phone.message}</p>}
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1.5">Código de Convite (opcional)</label>
-            <input {...register('referralCode')} placeholder="Código de um amigo" className="input-base" />
+            <label className="block text-sm font-medium text-text-secondary mb-1.5">
+              Código de Convite
+              {hasReferral && <span className="ml-2 text-xs text-brand font-semibold">✓ Aplicado</span>}
+              {!hasReferral && <span className="text-text-muted font-normal"> (opcional)</span>}
+            </label>
+            <input
+              {...register('referralCode')}
+              placeholder="Código de convite"
+              className={`input-base ${referralCode ? 'border-brand/50 bg-brand/5' : ''}`}
+              readOnly={hasReferral}
+            />
+            {referralCode && (
+              <p className="text-xs text-brand mt-1 flex items-center gap-1">
+                <Gift className="w-3 h-3" /> Seu amigo ganha R$50 quando você se cadastrar!
+              </p>
+            )}
           </div>
         </div>
       )}
@@ -146,12 +177,20 @@ export default function RegisterForm() {
       {step === 2 && (
         <div className="space-y-4 animate-fade-in">
           <div className="card p-4 bg-brand/5 border-brand/20">
-            <p className="text-sm font-semibold text-brand mb-1">Bônus de boas-vindas</p>
+            <p className="text-sm font-semibold text-brand mb-1">🎁 Bônus de boas-vindas</p>
             <p className="text-sm text-text-secondary">
               Ao criar sua conta você recebe <strong className="text-text-primary">R$40,00</strong> de bônus.
               Rollover de <strong className="text-text-primary">R$150,00</strong> em apostas para liberar o saque.
             </p>
           </div>
+          {referralCode && (
+            <div className="card p-4 bg-neon-green/5 border-neon-green/20">
+              <p className="text-sm font-semibold text-neon-green mb-1">👥 Convite ativo</p>
+              <p className="text-sm text-text-secondary">
+                Você foi convidado! Seu amigo receberá <strong className="text-text-primary">R$50,00</strong> assim que você criar sua conta.
+              </p>
+            </div>
+          )}
           <label className="flex items-start gap-3 cursor-pointer">
             <input {...register('terms')} type="checkbox" className="mt-1 w-4 h-4 accent-brand rounded" />
             <span className="text-sm text-text-secondary">
