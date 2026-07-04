@@ -9,19 +9,19 @@ import { cn } from '@/lib/utils'
 const BANNERS = [
   {
     id: 1,
-    image: '/banner-indicacao.jpeg',
+    image: '/WhatsApp%20Image%202026-07-03%20at%2014657.52.55.jpeg',
     alt: 'Convide Amigos e Ganhe R$50',
     href: '/afiliados',
   },
   {
     id: 2,
-    image: '/banner-deposito.jpeg',
+    image: '/WhatsApp%20Image%202026-07-03%20at%20145.52.55.jpeg',
     alt: '10% a mais sobre cada depósito',
     href: '/carteira?aba=deposito',
   },
   {
     id: 3,
-    image: '/banner-retorno.jpeg',
+    image: '/WhatsApp%20Image%202026-07-03%20at%2014.52.55.jpeg',
     alt: '5% de Retorno Semanal — Grandes Ganhos',
     href: '/bonus',
   },
