@@ -12,11 +12,13 @@ export function formatBRL(value: number): string {
   }).format(value)
 }
 
-export function formatCPF(cpf: string): string {
+export function formatCPF(cpf: string | null | undefined): string {
+  if (!cpf) return '—'
   return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')
 }
 
-export function maskCPF(cpf: string): string {
+export function maskCPF(cpf: string | null | undefined): string {
+  if (!cpf) return '—'
   const cleaned = cpf.replace(/\D/g, '')
   return cleaned.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.***.***-$4')
 }
